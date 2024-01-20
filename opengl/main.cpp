@@ -1,132 +1,19 @@
 #include <GLFW/glfw3.h>
 #include <math.h>
+#include <cmath> 
 #include <stdio.h>
 using namespace std; 
-
-void linedrawDDA(float x1, float y1, float x2, float y2, float step) {
-
-    if (x1 > x2) {
-        float x_temp_1 = x2;
-        x2 = x1;
-        x1 = x_temp_1;
-        float y_temp_1 = y2;
-        y2 = y1;
-        y1 = y_temp_1;
-
-    }
-
-    float sl_pe = (y2 - y1) / (x2 - x1);
-    float x_temp = x1;
-    float y_temp = y1;
-
-    while (x_temp < x2) {
-    glBegin(GL_LINES);
-        glVertex2f(x_temp, y_temp);
-        x_temp = x_temp + step;
-        y_temp = y_temp + sl_pe * (x_temp - (x_temp - step));
-        glVertex2f(x_temp, y_temp);
-    glEnd();
-    }
-}
-
-void linedrawBLA(float x1, float y1, float x2, float y2, float step) {
-
-    if (x1 > x2) {
-        float x_temp_1 = x2;
-        x2 = x1;
-        x1 = x_temp_1;
-        float y_temp_1 = y2;
-        y2 = y1;
-        y1 = y_temp_1;
-
-    }
-
-    float sl_pe = (y2 - y1) / (x2 - x1);
-    float del_x = x2 - x1;
-    float del_y = y2 - y1;
-
-    if (sl_pe < 1) {
-        float i1 = 2 * del_y;
-        float i2 = 2 * (del_y - del_x);
-        float p0 = i1 - del_x;
-        float x_temp = x1;
-        float y_temp = y1;
-        float p_temp = p0;
-        while (x_temp < x2) {
-            glBegin(GL_LINES);
-                glVertex2f(x_temp, y_temp);
-                if (p_temp < 0) {
-                    p_temp = p_temp + i1;
-                    x_temp = x_temp + step;
-                    y_temp = y_temp;
-                }
-                else {
-                    p_temp = p_temp + i2;
-                    x_temp = x_temp + step;
-                    y_temp = y_temp + step;
-                }
-                glVertex2f(x_temp, y_temp);
-            glEnd();
-        }
-    }
-    if (sl_pe >= 1) {
-        float p0 = 2 * del_x - del_y;
-        float i1 = 2 * del_x;
-        float i2 = 2 * (del_x - del_y);
-        float p_temp = p0;
-        float x_temp = x1;
-        float y_temp = y1;
-        while (y_temp < y2) {
-            glBegin(GL_LINES);
-            glVertex2f(x_temp, y_temp);
-            if (p_temp < 0) {
-                p_temp = p_temp + i1;
-                x_temp = x_temp;
-                y_temp = y_temp + step;
-            }
-            else {
-                p_temp = p_temp + i2;
-                x_temp = x_temp + step;
-                y_temp = y_temp + step;
-            }
-            glVertex2f(x_temp, y_temp);
-            glEnd();
-        }
-    }
-}
 // every render I'll have to check the status of each object and cell and then store the information, only to delete everything and then re-draw the entire thing again. 
 
 // idea, make an array of maximum number of particles, the array is invoked if a particle is created, then the class is created, the class has a function that draws shit first
 // then another function accesses the position of each of these objects, checks the other pixels, then with the conditions, changes the value of the object.
-void draw_column() {
-    glColor3f(1.0f, 1.0f, 1.0f);
-    float a = -0.64;
-    for (int x =-1; x <= 31; x++) {
-        glLineWidth(0.001f);
-        glBegin(GL_LINES);
-        glVertex2f(a, -0.64f);
-        glVertex2f(a, 0.64f);
-        glEnd();
-        a = a + 0.04;
-    }
-}
 
-void draw_row() {
-    glColor3f(1.0f, 1.0f, 1.0f);
-    float b = -0.64;
-    for (int x = -1; x <= 31; x++) {
-        glLineWidth(0.001f);
-        glBegin(GL_LINES);
-        glVertex2f(-0.64f, b);
-        glVertex2f(0.64f,b);
-        glEnd();
-        b = b + 0.04;
-    }
-}
 
 GLfloat particle_size = 15.0f;
 GLfloat stride = 0.02f;
 GLfloat stride_in_pixel = 15;
+int windowWidth = 1500;
+int windowHeight = 1500;
 class particle_sand {
 public:     
       float pos_x;
@@ -169,8 +56,6 @@ void check_sand(particle_sand* particles, GLfloat x_f, GLfloat y_f, int no) {
     GLfloat pixel_down[3];
     GLfloat pixel_downleft[3];
     GLfloat pixel_downright[3];
-    int windowWidth = 1500;
-    int windowHeight = 1500;
     float normalizedX = x_f + stride/2; //offset of the particle
     float normalizedY = y_f + stride/2;
     int x = (normalizedX + 1) / 2 * windowWidth;
@@ -201,8 +86,6 @@ void check_water(particle_water* waters, GLfloat x_f, GLfloat y_f, int no) {
     GLfloat pixel_downright[3];
     GLfloat pixel_left[3];
     GLfloat pixel_right[3];
-    int windowWidth = 1500;
-    int windowHeight = 1500;
     float normalizedX = x_f + stride/2; //offset of the particle
     float normalizedY = y_f + stride/2;
     int x = (normalizedX + 1) / 2 * windowWidth;
@@ -326,6 +209,8 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
     }
 }
 const int interval_between_frames = 5;
+
+
 int main(void)
 {
     GLFWwindow* window;
@@ -362,7 +247,6 @@ int main(void)
             spawn_water_init(waters, init_pos_x, init_pos_y, water_count);
             waterFrame = false;
         }
-        // linedrawBLA(-0.5f, -0.5f, 0.2f, 0.7f,0.001);
         /* Swap front an back buffers */
         int  water_on_screen = water_count;
         for (int l = 0; l <= water_on_screen; l++) {
@@ -383,6 +267,7 @@ int main(void)
             }
         }
         runtime_frame_count++;
+
         glfwSwapBuffers(window);
         /* Poll for and process events */
         glfwPollEvents();
